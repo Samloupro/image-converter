@@ -1,25 +1,21 @@
-# Utiliser une image de base Node.js avec libvips et AVIF supporté
-FROM v4tech/imagemagick
+# Utilisez une image Node.js légère
+FROM node:16-alpine
 
-# Installer Node.js manuellement
-RUN apt-get update && \
-    apt-get install -y curl gnupg && \
-    curl -sL https://deb.nodesource.com/setup_18.x | bash - && \
-    apt-get install -y nodejs && \
-    apt-get install -y libvips-dev libheif-dev
-
-# Créer et définir le répertoire de travail
+# Définir le répertoire de travail dans le conteneur
 WORKDIR /app
 
-# Copier package.json et installer les dépendances
-COPY package*.json ./
+# Copier le fichier package.json et installer les dépendances
+COPY package.json ./
 RUN npm install
 
-# Copier le reste de l'application
+# Copier le reste des fichiers de l'application
 COPY . .
 
-# Exposer le port de l'application
+# Créer le dossier public pour stocker les images converties
+RUN mkdir -p /app/public
+
+# Exposer le port (non nécessaire pour Vercel mais utile pour d'autres déploiements Docker)
 EXPOSE 3000
 
-# Commande pour démarrer l'application
+# Démarrer l'application
 CMD ["npm", "start"]
