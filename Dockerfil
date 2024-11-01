@@ -1,9 +1,9 @@
 # Utiliser une image de base Node.js
 FROM node:18
 
-# Installer les dépendances nécessaires pour libvips avec AVIF support
+# Installer les dépendances pour libvips avec support AVIF
 RUN apt-get update && \
-    apt-get install -y curl build-essential libvips-dev libheif-dev && \
+    apt-get install -y curl build-essential libvips-dev libheif-dev libjpeg-turbo-progs && \
     rm -rf /var/lib/apt/lists/*
 
 # Créer et définir le répertoire de travail
