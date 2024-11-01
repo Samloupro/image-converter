@@ -25,26 +25,33 @@ app.post('/convert', async (req, res) => {
     const imageBuffer = Buffer.from(response.data, 'binary');
     console.log('Converting image to AVIF format...');
 
-    // Utilisation d'un nom de fichier unique et du dossier temporaire
     const outputFileName = `${uuidv4()}.avif`;
-    const outputPath = path.join('/tmp', outputFileName); // Utilisation du dossier temporaire /tmp
+    const outputPath = path.join('/tmp', outputFileName); // Utilisation de /tmp pour la compatibilité avec Vercel
 
+    // Conversion de l'image avec Sharp
     await sharp(imageBuffer)
       .toFormat('avif')
       .toFile(outputPath);
 
-    console.log(`Conversion successful. File saved to ${outputPath}`);
+    console.log(`Conversion réussie. Fichier sauvegardé à ${outputPath}`);
 
-    // Lecture du fichier converti et envoi de son contenu en réponse
     const convertedImage = fs.readFileSync(outputPath);
     res.setHeader('Content-Type', 'image/avif');
     res.send(convertedImage);
 
-    // Nettoyage du fichier temporaire après l'envoi
+    // Nettoyage du fichier temporaire
     fs.unlinkSync(outputPath);
   } catch (error) {
-    console.error('Sharp conversion error:', error);
-    res.status(500).json({ error: 'Failed to convert image' });
+    console.error('Erreur lors de la conversion avec Sharp:', error);
+
+    // Vérification si l'erreur vient de Sharp ou d'une autre source
+    if (error.message.includes('heif')) {
+      return res.status(500).json({ error: 'Le format AVIF n\'est pas pris en charge sur ce serveur.' });
+    } else if (error.code === 'ENOENT') {
+      return res.status(500).json({ error: 'Impossible de lire ou écrire le fichier temporaire.' });
+    } else {
+      return res.status(500).json({ error: 'Failed to process the image' });
+    }
   }
 });
 
