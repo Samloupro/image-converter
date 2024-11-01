@@ -16,7 +16,7 @@ app.post('/convert', async (req, res) => {
   }
 
   try {
-    // Télécharge l'image depuis l'URL
+    console.log('Fetching image from URL:', imageUrl);
     const response = await axios({
       url: imageUrl,
       responseType: 'arraybuffer',
@@ -26,19 +26,23 @@ app.post('/convert', async (req, res) => {
     const outputFileName = `${uuidv4()}.avif`;
     const outputPath = path.join(__dirname, 'public', outputFileName);
 
-    // Convertit l'image en AVIF
-    await sharp(imageBuffer)
-      .toFormat('avif')
-      .toFile(outputPath);
+    try {
+      console.log('Converting image to AVIF format...');
+      await sharp(imageBuffer)
+        .toFormat('avif')
+        .toFile(outputPath);
+      console.log('Image conversion successful:', outputFileName);
+    } catch (sharpError) {
+      console.error('Sharp conversion error:', sharpError);
+      return res.status(500).json({ error: 'Failed to process the image' });
+    }
 
-    // Envoie le fichier AVIF en tant que réponse
     res.set('Content-Type', 'image/avif');
     res.sendFile(outputPath, err => {
       if (err) {
         console.error('Error sending the file:', err);
         res.status(500).json({ error: 'Failed to send converted image' });
       } else {
-        // Supprime le fichier après envoi
         fs.unlink(outputPath, unlinkErr => {
           if (unlinkErr) {
             console.error('Error deleting the file:', unlinkErr);
@@ -52,10 +56,8 @@ app.post('/convert', async (req, res) => {
   }
 });
 
-// Serve static files from the public directory
 app.use(express.static('public'));
 
-// Démarre le serveur sur le port spécifié par Vercel ou un port par défaut
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
