@@ -1,8 +1,8 @@
 const express = require('express');
 const sharp = require('sharp');
 const axios = require('axios');
-const path = require('path');
 const fs = require('fs');
+const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 
 const app = express();
@@ -16,47 +16,37 @@ app.post('/convert', async (req, res) => {
   }
 
   try {
-    console.log('Fetching image from URL:', imageUrl);
+    console.log(`Fetching image from URL: ${imageUrl}`);
     const response = await axios({
       url: imageUrl,
       responseType: 'arraybuffer',
     });
 
     const imageBuffer = Buffer.from(response.data, 'binary');
+    console.log('Converting image to AVIF format...');
+
+    // Utilisation d'un nom de fichier unique et du dossier temporaire
     const outputFileName = `${uuidv4()}.avif`;
-    const outputPath = path.join(__dirname, 'public', outputFileName);
+    const outputPath = path.join('/tmp', outputFileName); // Utilisation du dossier temporaire /tmp
 
-    try {
-      console.log('Converting image to AVIF format...');
-      await sharp(imageBuffer)
-        .toFormat('avif')
-        .toFile(outputPath);
-      console.log('Image conversion successful:', outputFileName);
-    } catch (sharpError) {
-      console.error('Sharp conversion error:', sharpError);
-      return res.status(500).json({ error: 'Failed to process the image' });
-    }
+    await sharp(imageBuffer)
+      .toFormat('avif')
+      .toFile(outputPath);
 
-    res.set('Content-Type', 'image/avif');
-    res.sendFile(outputPath, err => {
-      if (err) {
-        console.error('Error sending the file:', err);
-        res.status(500).json({ error: 'Failed to send converted image' });
-      } else {
-        fs.unlink(outputPath, unlinkErr => {
-          if (unlinkErr) {
-            console.error('Error deleting the file:', unlinkErr);
-          }
-        });
-      }
-    });
+    console.log(`Conversion successful. File saved to ${outputPath}`);
+
+    // Lecture du fichier converti et envoi de son contenu en réponse
+    const convertedImage = fs.readFileSync(outputPath);
+    res.setHeader('Content-Type', 'image/avif');
+    res.send(convertedImage);
+
+    // Nettoyage du fichier temporaire après l'envoi
+    fs.unlinkSync(outputPath);
   } catch (error) {
-    console.error('Error converting image:', error);
+    console.error('Sharp conversion error:', error);
     res.status(500).json({ error: 'Failed to convert image' });
   }
 });
-
-app.use(express.static('public'));
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
