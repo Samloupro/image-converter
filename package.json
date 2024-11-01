@@ -1,15 +1,19 @@
 {
   "name": "image-converter",
   "version": "1.0.0",
-  "description": "Image converter API to AVIF format",
+  "description": "A simple image converter to AVIF format using Node.js and Express",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
   },
   "dependencies": {
+    "axios": "^0.27.2",
     "express": "^4.17.1",
-    "sharp": "^0.29.3",
-    "axios": "^0.24.0",
+    "sharp": "^0.30.6",
     "uuid": "^8.3.2"
-  }
+  },
+  "engines": {
+    "node": "16.x"
+  },
+  "license": "MIT"
 }
