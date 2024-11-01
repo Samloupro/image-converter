@@ -1,0 +1,23 @@
+# Utiliser une image de base Node.js
+FROM node:18
+
+# Installer les dépendances nécessaires pour libvips avec AVIF support
+RUN apt-get update && \
+    apt-get install -y curl build-essential libvips-dev libheif-dev && \
+    rm -rf /var/lib/apt/lists/*
+
+# Créer et définir le répertoire de travail
+WORKDIR /app
+
+# Copier package.json et installer les dépendances
+COPY package*.json ./
+RUN npm install
+
+# Copier le reste de l'application
+COPY . .
+
+# Exposer le port de l'application
+EXPOSE 3000
+
+# Commande pour démarrer l'application
+CMD ["npm", "start"]
